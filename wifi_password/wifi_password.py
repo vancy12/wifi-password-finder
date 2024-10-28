@@ -4,7 +4,6 @@
 Quickly fetch your WiFi password and if needed, generate a QR code
 of your WiFi to allow phones to easily connect
 
-by Siddharth Dushantha
 """
 
 import pathlib
@@ -14,8 +13,8 @@ from shutil import which
 import re
 import os
 
-import utils
-import constants
+from . import utils
+from . import constants
 
 __version__ = "1.1.1"
 
@@ -88,11 +87,12 @@ def main() -> None:
         sys.exit()
 
     wifi_dict = {}
-
+    profiles = []
+    
     if args.list:
         profiles = utils.get_profiles()
         wifi_dict= utils.generate_wifi_dict(profiles)
-        utils.print_dict(wifi_dict)
+        utils.print_dict(wifi_dict, profiles)
         return
 
     if args.ssid is None:
@@ -108,7 +108,7 @@ def main() -> None:
             utils.generate_qr_code(ssid=key, password=value, path=args.save_qr, show_qr=args.show_qr)
         return
 
-    utils.print_dict(wifi_dict)
+    utils.print_dict(wifi_dict, profiles)
 
 if __name__ == "__main__":
     main()
