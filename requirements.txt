@@ -2,3 +2,5 @@ qrcode
 image
 Pillow
 colorama
+# constants
+# utils
