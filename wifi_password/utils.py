@@ -6,7 +6,7 @@ import subprocess
 import qrcode
 import colorama
 
-import constants
+from . import constants
 
 def get_platform() -> str:
     """
@@ -36,7 +36,9 @@ def get_profiles() -> list:
     try:
         if platform == constants.MAC:
             # Command found here : https://coderwall.com/p/ghl-cg/list-known-wlans
-            profiles = run_command(f"defaults read ~/Library/Logs/com.apple.wifi.syncable-networks.plist | grep \" SSID\" | sed 's/^.*= \(.*\);$/\\1/' | sed 's/^\"\\(.*\)\"$/\\1/'").split('\n')
+
+            profiles = run_command(r"defaults read ~/Library/Logs/com.apple.wifi.syncable-networks.plist | grep \" SSID\" | sed 's/^.*= \(.*\);$/\\1/' | sed 's/^\"\\(.*\)\"$/\\1/'").split('\n')
+
         elif platform == constants.LINUX:
             if os.getuid() != 0:
                 ssid = run_command(f"sudo ls /etc/NetworkManager/system-connections/ | grep .nmconnection").split('\n')
@@ -77,10 +79,8 @@ def generate_wifi_dict(profiles: list) -> dict:
         return
 
     for ssid in profiles:
-        if get_platform() == constants.MAC and len(profiles) > 1:
-            password = "*****"
-        else:
-            password = get_password(ssid)
+        
+        password = get_password(ssid)
         
         wifi_dict[ssid] = password
 
@@ -134,10 +134,24 @@ def run_command(command: str) -> str:
     output, _ = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, shell=True, env=env).communicate()
     return output.decode("utf-8", errors="replace").rstrip("\r\n")
 
-def print_dict(ssid: dict) -> None:
+def print_dict(ssid: dict, profile: list) -> None:
     """
     Prints the contents of the given dictionary that contains the wifi name and password
     """
+    # If macOS and list 
+
+    if get_platform() == constants.MAC:
+        print("----------------------------------------------")
+        print("{:<30}".format("SSID"))
+        print("----------------------------------------------")
+
+        for value in profiles:
+            print("{:<30}".format(value))
+
+        print("----------------------------------------------")
+        print(f"Use 'wifi-password -s <SSID>' to find a specific WIFI password")
+
+
     if ssid is None:
         print(f'Dictionary is not defined.')
         return
@@ -154,10 +168,6 @@ def print_dict(ssid: dict) -> None:
         print("{:<30}| {:<}".format(key, value))
 
     print("----------------------------------------------")
-    # If macOS and list 
-
-    if get_platform() == constants.MAC and len(ssid) > 1:
-        print(f"Use 'wifi-password -s <SSID>' to find a specific WIFI password")
 
 def generate_qr_code(ssid: str, password: str, path: str, show_qr: bool) -> None:
     """
